@@ -1,0 +1,171 @@
+AZ URSULA ALKALMAZ�S V�ZLATA
+==============================
+==============================
+
+ADATB�ZIS MODELL
+================
+
+- UserAccount: UIDSTR, jelszo, tipus, enabled
+
+- Beteg: TAJ, Nev, szuldate, cim, telefon, foglalkozas, FK_UIDSTR
+- Eset: EID, statusz(NY,Z), panasz, diagnozis, dstat, zarStat(gyogyult,marad,halott), terites, nyitDate, zarDate, FK_TAJ
+- Kezel�s: KID, statusz(E,NY,Z), nyitDate, vegDate, specifikacio, nyitStat, info, vegStat, pontok, FK_ELID, FK_EID  
+
+- Orvos: 	ELID, N�v, FK_OSZTID, FK_UIDSTR
+- Labor: 	ELID, Nev, Telefon, FK_UIDSTR
+- Osztaly: OSZTID, Nev, Telefon, FK_VEZELID
+
+
+ALKALMAZ�S BEANEK
+======================
+
+- UserManager
+	checkLogin(userstr, pwd)       TYPE
+	setLoginParameters(userstr, pwd, isenabled)
+
+- EllatoNavigator
+	isLabor(ELID)
+
+	getOrvosData(ELID)  { Nev, OSZTID, Osztnev, Telefon }
+	getLaborData(ELID)  { Nev, Telefon }
+	getOsztalyData(OSZTID)  { Nev, Telefon, VezNev, VezELID }
+
+	findAllLabor()		        V_ELID
+	findAllOsztaly()		V_ELID
+	findAllOrvos(osztalystr)	V_OSZTID
+
+	searchKezelesek(ELID, beginDate, endDate)   V_KID
+
+
+- EllatoManager
+	addOrvos(ELID, Nev, OSZTID, UIDSTR)
+	addOsztaly(OSZTID, Osztvev, telefon, VEZ_ELID)
+	addLabor(ELID, Nev, Telefon, UIDSTR)
+	modifyOrvos(Orvos)
+	modifyOsztaly(Osztaly)
+	modifyLabor(Labor)
+	removeOrvos(ELID)
+	removeOsztaly(ELID)
+	removeLabor(ELID)
+	setOsztaly(ELID, OSZTID)
+	setVezeto(OSZTID, ELID)
+
+	sumPontok(ELID, beginDate, enddate)	 INT
+	sumOsztPontok(OSZTID, begindate, enddate) INT
+
+	getEllatoUID(ELID, UIDSTR)
+
+- BetegManager
+	R saveBeteg( BETEG)	{ TAJ, Nev, Fogl, szul, cim, telefon, UIDSTR }    
+	ROL findBeteg(TAJ)		BETEG    { TAJ, Nev, Fogl, szul, cim, telefon, UIDSTR }
+	RO getKezelesek(TAJ, bedinDate, endDate)  V_KID
+
+	R addEset( TAJ, panasz, date) EID
+	O setEsetDiag(EID, diagnozis, dstat, date)
+	O lezarEset(EID, zarStat, date)
+	OL addEsetTerites(EID, int)
+
+	O getEsetek(TAJ) v_EID
+	O readEset(EID)  ESETDTO { EID, TAJ, statusz, panasz, diagnozis, d_stat, zarstat, terites, nyitDate, zarDate}
+
+	addKezeles( EID, ELID, nyitDate, kezspec)
+	nyitKezeles( KID, nyitstat, date)
+	appendKezelesInfo(KID, info, date)
+	lezarKezeles( KID, zarstat, date, pontok)
+
+	getKezelesek(EID) V_KID	
+	readKezeles(KID) KEZELESDTO { KID, EID, TAJ, ELID, statusz, kezspec, nyitStat, info, vegStat, pontok, nyitDate, zarDate
+	
+- BetegSelfCare
+	readBeteg(BETEGDTO)   TAJ         { TAJ, Nev, Fogl, szul, cim, telefon, UID }
+	getKezelesek(TAJ, bedinDate, endDate)    V_KID
+	readKezelesRestricted(KID)	KEZRESTRDTO { KID, TAJ, statusz, kezspec, pontok, nyitDate, zarDate }
+	getAlternativeDates(KID)   V_DATE
+	setKezelesDate(KID, nyitDate)
+
+
+DATA TRANSFER OBJECTEK
+======================
+
+BetegDTO:        TAJ, Nev, Fogl, szul, cim, telefon, UIDSTR
+EsetDTO:         EID, TAJ, statusz, panasz, diagnozis, d_stat, zarstat, terites, nyitDate, zarDate
+KezelesDTO:      KID, EID, TAJ, ELID, statusz, kezspec, nyitStat, info, vegStat, pontok, nyitDate, zarDate
+KezelesRestrDTO: KID, TAJ, statusz, kezspec, pontok, nyitDate, zarDate
+
+beteg/self  -> B
+beteg/<id>   -> R v. O (ha van nyitott kez.), L (ha van nyitott kezeles.), A, B (ha self) 
+beteg/<taj>/esetek -> R v. O (ha van nyitott kez.), A, B (ha self) 
+beteg/<taj>/<eid>/kezelesek -> R, O (ha van nyitott kez. a beteghez), A, B (ha self)
+beteg/<taj>/fuggokezelesek -> R v. O (ha van nyitott kez.), A, B (ha self) 
+beteg/kezeles/<kid>  -> R v. O (ha nyitott), L (ha nyitott), A, B (ha self)
+beteg/kezeles/<kid>/alt_dates  -> R, B (ha self)
+
+P beteg/new -> R
+P beteg/<taj> -> R
+P beteg/<taj>/eset/new -> R
+P beteg/<taj>/eset/<eid> -> O (ha van nyitott kezel�s)
+P beteg/<taj>/eset/<eid>/kezeles/new -> R, O (ha van m�sik nyitott kez)
+P beteg/kezeles/<kid>/orvos -> O (ha saj�t, v oszt�ly vez/�gy), A (ha nem lez�rt)
+P beteg/kezeles/<kid>/nyit -> L (ha saj�t), O (ha saj�t)
+P beteg/kezeles/<kid>/zar -> L (ha saj�t), O (ha saj�t)
+P beteg/kezeles/<kid>/select_date -> R, B (ha self)
+
+
+ellato/<elid>      R A L O
+ellato/byname/<namepattern>
+osztaly/all        R A L O
+osztaly/<oid>      R A L O
+osztaly/<oid>/orvosok R A L O
+
+P ellato/new     A
+P osztaly/new	 A
+P ellato/<elid>  A ; oszt�lyv�lt�s is
+P osztaly/<oid>  A ; vezet� �s �gyeletesvaltas is
+P osztaly/<oid>/ugyeletes A -> csak �gyeltesv�lt�s
+
+G user/self				 mindenki magára				 
+G user/<id>				 R				 
+P user/new          	 A ( L O R-re), R (betegre)
+P user/password          mindenki mag�ra  
+P user/password/<uid>    A ( L O R-re), R (betegre)
+P user/delete/<uid>		 A ( L O R-re) R (betegre)
+P login
+
+Beteg: megn�zheti a saj�t adatait, eseteit, kezel�seit
+       >>> findBeteg(taj=self), findEsetek(taj=self), findKezelesek(Eset.Beteg.taj=self) 
+       k�rhet egy kezel�shez alternat�v id�pontokat, �s v�laszthat ezek k�z�l
+    
+Orvos: 
+       megn�zheti azon betegek �sszes adat�t, eset�t �s kezel�s�t, akiknek nyitott esete van �s abban legal�bb egy (b�rmilyen st�tusz�) kezel�s van n�la, vagy egy oszt�lyn�l, aminek � a vezet�je vagy �gyeletese.
+       >>> findBeteg(taj) -> check a v�g�n
+       >>> findEsetek(taj) -> check a betegre
+       >>> findKezel�sek(eset) -> check az esetId.beteg-re
+checkBetegAccessToOrvos()
+
+       �tveheti vagy az oszt�lyon bel�l �tadhatja az olyan el�jegyzett v. nyitott kezel�seket, amelyek a nev�re vannak �rva, ill. amelyek oszt�ly�nak � a vezet�je, v. �gyeletese
+	   megnyithatja a sz�m�ra ki�rt kezel�seket
+       felvehet �j kezel�st mag�nak v. m�soknak (OL), azokhoz az esetkhez, amikben van nyitott kezel�se.
+       m�dos�thatja a sz�m�ra ki�rt nyitott kezel�s �s az ahhoz tartoz� eset adatait.
+       lez�rhat egy sz�m�ra nyitott kezel�st
+
+Labor: megn�zheti a sz�m�ra ki�rt el�jegyzett kezel�seket, 
+	   megnyithat egy sz�m�ra el�jegyzett kezel�st ID vagy TAJ alapj�n
+	   megn�zheti a nyitott kezel�st �s az ehhez tartoz� beteg adatokat (az eseteket nem).
+       m�dos�thatja (�s lez�rhatja) a sz�m�ra ki�rt nyitott kezel�seket. 
+
+Recepci�: 
+	   taj alapj�n megkereshet egy beteget �s azok nyitott eseteit  (diagn�zis �s dstat n�lk�l) �s azok nem lez�rt kezel�seit 
+       felvehet �j beteget, �j, nyitott esetet, �s olyan �j el�jegyzett kezel�st, amit oszt�lyhoz rendel orvos n�lk�l
+       m�dos�thatja egy beteg adatait
+	   megv�ltoztathatja az el�jegyzett kezel�sek idej�t 
+       megn�zheti az orvosok adatait
+
+Adminisztr�ci�:
+       megn�zheti az �sszes beteget, az �sszes esetet (diagnozis �s dstat n�lk�l) �s a kezel�seket
+       kre�lhat/m�dos�that oszt�lyokat, orvosokat 
+       orvosokat hozz�/�trendelhet az oszt�lyokhoz  (az el�jegyzett kezel�sekb�l t�rl�dik az orvos, nyitott kezel�sekn�l hiba)
+       �t�ll�thatja az oszt�ly vezet�j�t v. �gyeletes�t
+       �t�ll�thatja egy nem lez�rt kezel�s orvos�t
+       
+        
+
