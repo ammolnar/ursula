@@ -1,54 +1,105 @@
 package hu.elte.szgy.rest;
 
-import java.security.Principal;
+import hu.elte.szgy.data.User;
+import hu.elte.szgy.data.User.UserType;
+import hu.elte.szgy.data.UserRepository;
+
+import javax.persistence.EntityExistsException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.boot.*;
-import org.springframework.boot.autoconfigure.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import hu.elte.szgy.data.BetegDao;
-import hu.elte.szgy.data.Beteg;
-import hu.elte.szgy.data.User;
-import hu.elte.szgy.data.UserDao;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("user")
+@Transactional
 public class UserManager {
 	private static Logger log = LoggerFactory.getLogger(UserManager.class);
 
 	@Autowired
-	private UserDao userDao;
+	private UserRepository userDao;
 
-	@GetMapping("/{userid}")
-    public String findUser(@PathVariable("userid") String username) {
-		User u = userDao.findByUsername(username);
-	
-		return "{ \"username\":\"" +u.getUsername() + "\"" + 
-				  "\"type\":\"" +u.getType().name() + "\"" +
+    private String printUser(User u) {
+		return "{ \"username\":\"" +u.getUsername() + "\", " + 
+				  "\"type\":\"" +u.getType().name() + "\", " +
 				  "\"id\":\"" +u.getUserid() + "\"}";
     }
 
-    @PostMapping("/new")
-	public ResponseEntity<Void> createUser(@RequestBody(required=false) User u, UriComponentsBuilder builder) {
-    	log.error( "CREATING NEW USER" );
-                boolean flag = true; 
-				userDao.addUser(u);
-                if (flag == false) {
-        	       return new ResponseEntity<Void>(HttpStatus.CONFLICT);
-                }
-                log.info( "Creating user: " + u.getUserid() );
-                HttpHeaders headers = new HttpHeaders();
-                headers.setLocation(builder.path("/{userid}").buildAndExpand(u.getUserid()).toUri());
-                return new ResponseEntity<Void>(headers, HttpStatus.CREATED);
+    @GetMapping("/self")
+    public String selfUser(Authentication a) {
+		User u = userDao.getOne(a.getName());
+		return printUser(u); 
 	}
+		
+	@GetMapping("/{userid}")
+    public String otherUser(@PathVariable("userid") String username, Authentication a) {
+		User u = userDao.getOne(username);
+		if(u.getType() != UserType.BETEG && a.getAuthorities().contains("ROLE_RECEPCIOS")) {
+			throw new AccessDeniedException("No access to User: "+username);
+		}
+		return printUser(u);
+	}
+		
+
+    @PostMapping("/password")
+	public ResponseEntity<Void> setSelfpassword(@RequestBody PassDTO pass, Authentication a) {
+    	    return setPassword(a.getName(), pass, a);
+    }
+
+    @PostMapping("/password/{userId}")
+	public ResponseEntity<Void> setPassword(@PathVariable("userid") String username,
+			@RequestBody PassDTO pass, Authentication a) {
+    		User u = userDao.getOne(username);
+    		if(!username.equals( a.getName() ) &&
+    			!a.getAuthorities().contains( "ROLE_ADMIN") &&
+    			!(a.getAuthorities().contains( "ROLE_RECEPCIOS") && u.getType() == UserType.BETEG)) {
+            	throw new AccessDeniedException("Invalid access to password");
+            }
+    		u.setPassword( "{noop}"+ pass.getNew_pass() );
+    		return new ResponseEntity<Void>(HttpStatus.ACCEPTED);
+    }
+
+    @PostMapping("/new")
+	//public ResponseEntity<Void> createUser(@RequestBody(required=false) User u, UriComponentsBuilder builder) {
+	public ResponseEntity<Void> createUser(@RequestBody(required=false) User u, Authentication a) {
+    			
+    			boolean admin = a.getAuthorities().contains(new SimpleGrantedAuthority( "ROLE_ADMIN"));
+    			log.info( "CREATING NEW USER BY", admin ? "ADMIN":"RECEPCIO" );
+                if(u.getType() != UserType.BETEG && !admin) {
+                	throw new AccessDeniedException("Only authorized to create BETEG users");
+                }
+                if(u.getType() == UserType.BETEG && admin || u.getType() == UserType.ADMIN) {
+                	throw new AccessDeniedException("Only authorized to create REC, LAB & ORVOS users");
+                }
+                if(!u.getPassword().startsWith( "{" )) u.setPassword( "{noop}"+u.getPassword() );
+                if(userDao.existsById( u.getUsername() )) {
+                	throw new EntityExistsException("Name already used");
+                }
+				userDao.save(u);
+                log.info( "Creating user: " + u.getUserid() );
+                return new ResponseEntity<Void>(HttpStatus.CREATED);
+	}
+    @PostMapping("/delete/{userid}")
+	public ResponseEntity<Void> deleteUser(@PathVariable("userid") String username, Authentication a) {
+		User u = userDao.getOne(username);
+		if(!a.getAuthorities().contains( "ROLE_ADMIN") &&
+    	   !(a.getAuthorities().contains( "ROLE_RECEPCIOS") && u.getType() == UserType.BETEG)) {
+            	throw new AccessDeniedException("Not authorized to delete");
+        }
+		userDao.delete( u );
+        return new ResponseEntity<Void>(HttpStatus.ACCEPTED);
+    }
 }
 

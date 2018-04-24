@@ -1,26 +1,23 @@
 package hu.elte.szgy.data;
 
 import java.io.Serializable;
-import java.util.Date;
-import javax.persistence.Column;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
-import javax.persistence.JoinColumn;
+import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
-import javax.persistence.FetchType;
-import javax.persistence.Enumerated;
-import javax.persistence.EnumType;
-import javax.persistence.Id;
 import javax.persistence.Table;
-import java.util.Set;
-import java.util.HashSet;
 
 @Entity
 @Table(name="ellato")
 @Inheritance(strategy = InheritanceType.JOINED)
+//@NamedQuery(name="Ellato.getAllEllato", query="SELECT e from Ellato as e order by e.nev")
 public class Ellato implements Serializable { 
 	private static final long serialVersionUID = 1L;
 	@Id 

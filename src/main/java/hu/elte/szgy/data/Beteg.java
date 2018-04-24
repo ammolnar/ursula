@@ -2,19 +2,19 @@ package hu.elte.szgy.data;
 
 import java.io.Serializable;
 import java.util.Date;
-import javax.persistence.Column;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.OneToMany;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.Set;
-import java.util.HashSet;
 
 @Entity
 @Table(name="beteg")
+@NamedQuery(name="Beteg.hasPendingKezelesBy", query="SELECT count(*) from Kezeles k WHERE k.eset.beteg.taj=:taj AND k.ellato.elid=:elid") 
 public class Beteg implements Serializable { 
 	private static final long serialVersionUID = 1L;
 	@Id 

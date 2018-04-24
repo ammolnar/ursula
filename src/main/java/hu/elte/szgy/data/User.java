@@ -1,14 +1,12 @@
 package hu.elte.szgy.data;
 
 import java.io.Serializable;
-import java.util.Date;
+
 import javax.persistence.Entity;
-import javax.persistence.Enumerated;
 import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.util.Set;
-import java.util.HashSet;
 
 @Entity
 @Table(name="users")
@@ -18,7 +16,7 @@ public class User implements Serializable {
     private String username;
     private String password;
 
-	public enum UserType { ORVOS, LABOR, BETEG, ADMIN }
+	public enum UserType { BETEG, ORVOS, LABOR, RECEPCIO, ADMIN }
 
 	@Enumerated(EnumType.STRING)
 	private UserType type;
