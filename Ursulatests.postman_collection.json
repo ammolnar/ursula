@@ -1,0 +1,147 @@
+{
+	"info": {
+		"_postman_id": "8754dbd5-6b9b-4b2f-bc57-c53f7cb4ecc9",
+		"name": "Ursulatests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "localhost:8080/login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "Reci",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "rrr",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:8080/login",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "localhost:8080/",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/user/new",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"disabled": false
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"username\":\"drbubo\", \"password\":\"{noop}haha\" }"
+				},
+				"url": {
+					"raw": "localhost:8080/user/new",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"user",
+						"new"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/beteg/55",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "localhost:8080/beteg/55",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"beteg",
+						"55"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8080/login?username=admin&password=aad",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "localhost:8080/login?username=admin&password=aad",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "admin"
+						},
+						{
+							"key": "password",
+							"value": "aad"
+						}
+					]
+				},
+				"description": "Nem szabályos login (url paraméterekkel), de ez is működik"
+			},
+			"response": []
+		}
+	]
+}

@@ -12,6 +12,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name="beteg")
 @NamedQuery(name="Beteg.hasPendingKezelesBy", query="SELECT count(*) from Kezeles k WHERE k.eset.beteg.taj=:taj AND k.ellato.elid=:elid") 
@@ -27,6 +29,7 @@ public class Beteg implements Serializable {
     private String foglalkozas;
 
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "beteg")
+	@JsonIgnore
 	private Set<Eset> esetek = new HashSet<Eset>(0);
 
 	public int getTaj() { return taj; }

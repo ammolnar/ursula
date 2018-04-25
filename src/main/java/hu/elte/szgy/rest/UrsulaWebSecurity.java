@@ -39,6 +39,7 @@ public class UrsulaWebSecurity extends WebSecurityConfigurerAdapter {
             .csrf().disable()
             .formLogin()
                 .loginPage("/login")
+                .successForwardUrl( "/user/dispatch" )
                 .permitAll()
                 .and()
             .logout()

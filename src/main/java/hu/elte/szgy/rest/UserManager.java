@@ -4,16 +4,22 @@ import hu.elte.szgy.data.User;
 import hu.elte.szgy.data.User.UserType;
 import hu.elte.szgy.data.UserRepository;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import javax.persistence.EntityExistsException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -101,5 +107,23 @@ public class UserManager {
 		userDao.delete( u );
         return new ResponseEntity<Void>(HttpStatus.ACCEPTED);
     }
+
+    @PostMapping("/dispatch")
+	public ResponseEntity<Void> dispatchUser() {
+    	//log.debug("Into URI: " + rr.getURI().toString() );
+    	SecurityContext cc = SecurityContextHolder.getContext();
+        HttpHeaders headers = new HttpHeaders();
+    	if(cc.getAuthentication() != null) {
+    		Authentication a=cc.getAuthentication();
+            try
+    		{
+    			headers.setLocation(new URI("/"+userDao.getOne(a.getName()).getType().toString().toLowerCase()+"_home.html"));
+    		}
+    		catch ( URISyntaxException e )	{ log.warn( "Dispatcher cannot redirect" ); }
+    	}
+    	
+    	return new ResponseEntity<Void>(headers, HttpStatus.FOUND);
+    }
+    
 }
 
