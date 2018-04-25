@@ -6,10 +6,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 @Configuration
 @EnableWebSecurity
@@ -19,6 +16,7 @@ public class UrsulaWebSecurity extends WebSecurityConfigurerAdapter {
     	
     	http
             .authorizeRequests()
+                .antMatchers(HttpMethod.GET,"/","/extjs/**").permitAll()
                 .antMatchers(HttpMethod.GET,"/beteg/self").hasRole("BETEG")
                 .antMatchers(HttpMethod.GET,"/beteg/*", "beteg/kezeles/*").hasRole("DOLGOZO")
                 .antMatchers(HttpMethod.GET,"/beteg/*/esetek","/beteg/*/*/kezelesek").hasAnyRole("ADMIN","ORVOS","RECEPCIO","BETEG")

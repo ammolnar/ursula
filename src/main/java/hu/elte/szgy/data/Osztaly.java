@@ -12,6 +12,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name="osztaly")
 public class Osztaly implements Serializable { 
@@ -28,8 +30,9 @@ public class Osztaly implements Serializable {
 	private Orvos ugyeletes;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "osztaly")
+    @JsonIgnore
     private Set<Orvos> orvosok = new HashSet<Orvos>(0);
-
+    
 	public String getNev() {
 		return nev;
 	}

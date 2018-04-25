@@ -10,6 +10,8 @@ import hu.elte.szgy.data.OsztalyRepository;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +24,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mysql.jdbc.log.Log;
+
 @RestController
 @RequestMapping("ellato")
 @Transactional
 public class EllatoManager
 {
+	private static Logger log = LoggerFactory.getLogger(BetegManager.class);
 	@Autowired
 	private EllatoRepository ellaDao;
 	
@@ -36,13 +41,16 @@ public class EllatoManager
 	@Autowired
 	private OsztalyRepository osztDao;
 
-	@GetMapping("/{elid}")
+	@GetMapping("/all")
+    public ResponseEntity<List<Ellato>>  getAllEllato() {
+		return new ResponseEntity<List<Ellato>>(ellaDao.findAll(),HttpStatus.OK);
+	}
+	
+    @GetMapping("/{elid}")
     public ResponseEntity<Ellato>  getEllato(@PathVariable("elid") Integer elid) {
-		Ellato ella = ellaDao.getOne(elid);
-		if(ella.getClass().equals(Orvos.class))
-			return new ResponseEntity<Ellato>((Orvos)ella, HttpStatus.OK);
-		else
-			return new ResponseEntity<Ellato>((Labor)ella, HttpStatus.OK);
+		Ellato ella = ellaDao.findById(elid).get();
+    	log.debug("ELLATO identified: " + ella.getClass().getName() + "Equals Orvos: " + (ella.getClass() == Orvos.class));
+		return new ResponseEntity<Ellato>(ella, HttpStatus.OK);
 	}
 
     @GetMapping("/byname/{name}")
@@ -63,7 +71,7 @@ public class EllatoManager
     @GetMapping("/osztaly/{oszid}/orvosok")
     public ResponseEntity<List<Orvos>>  getOrvosokByOsztaly(@PathVariable("oszid") String oszt_nev) {
     	Osztaly oszi = osztDao.getOne(oszt_nev);
-    	return new ResponseEntity<List<Orvos>>(osztDao.findOrvosByOsztaly(oszi), HttpStatus.OK);
+    	return new ResponseEntity<List<Orvos>>(orvDao.findOrvosByOsztaly(oszi), HttpStatus.OK);
     }
 
     @PostMapping("/orvos/new")
@@ -78,20 +86,20 @@ public class EllatoManager
     	return new ResponseEntity<Labor>(b, HttpStatus.CREATED);
     }
 
-    @PostMapping("osztaly/new")
+    @PostMapping("/osztaly/new")
     public ResponseEntity<Void>  createOsztaly(@RequestBody Osztaly osz) {
     	osztDao.save(osz);
     	return new ResponseEntity<Void>(HttpStatus.CREATED);
     }
 
-    @PostMapping("osztaly/{oszid}")
+    @PostMapping("/osztaly/{oszid}")
     public ResponseEntity<Void>  saveOsztaly(@PathVariable("oszid") String oszid, @RequestBody Osztaly osz) {
     	if(!osz.getNev().equals( oszid )) throw new AccessDeniedException( "Cannot save on different object" );
     	osztDao.save(osz);
     	return new ResponseEntity<Void>(HttpStatus.CREATED);
     }
 
-    @PostMapping("osztaly/{oszid}/ugyletes")
+    @PostMapping("/osztaly/{oszid}/ugyletes")
     public ResponseEntity<Void>  saveOsztalyUgyeletes(@PathVariable("oszid") String oszid, @RequestBody Orvos orvi) {
     	osztDao.getOne( oszid ).setUgyeletes(orvi);	
     	return new ResponseEntity<Void>(HttpStatus.CREATED);

@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -17,6 +18,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name="eset")
 public class Eset implements Serializable { 
@@ -27,14 +30,19 @@ public class Eset implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "fk_taj", nullable = false)
+	@JsonIgnore
 	private Beteg beteg;
+	
+	@Column(name = "fk_taj", insertable = false, updatable = false)
+	private int betegTAJ;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "eset")
+    @JsonIgnore
     private Set<Kezeles> kezelesek = new HashSet<Kezeles>(0);
 
-    enum Statusz{ NYITOTT, LEZART }
+    public enum Statusz{ NYITOTT, LEZART }
 
-    enum ZarStat{ GYUGYULT, KRONIKUS, MEGHALT }
+    public enum ZarStat{ GYUGYULT, KRONIKUS, MEGHALT }
 
     @Enumerated(EnumType.ORDINAL)
     private Statusz statusz;
@@ -77,5 +85,10 @@ public class Eset implements Serializable {
     public Set<Kezeles> getKezelesek() { return this.kezelesek; }
     public void setKezelesek(Set<Kezeles> kezelesek) { this.kezelesek = kezelesek; }
 
+    public int getBetegTAJ()	{		return betegTAJ;	}
+	public void setBetegTAJ( int betegTAJ )	{		this.betegTAJ = betegTAJ;	}
+	
+	public Eset() { ; }
+    public Eset(Integer nid) { esid = nid; }
 }
 

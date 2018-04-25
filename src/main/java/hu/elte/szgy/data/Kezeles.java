@@ -3,6 +3,7 @@ package hu.elte.szgy.data;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -12,6 +13,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name="kezeles")
@@ -23,13 +26,21 @@ public class Kezeles implements Serializable {
 
 	@ManyToOne
 	@JoinColumn(name = "fk_esid", nullable = false)
+	@JsonIgnore
 	private Eset eset;
+	
+	@Column(name = "fk_esid", insertable = false, updatable = false)
+	private int esetId;
 
 	@ManyToOne
 	@JoinColumn(name = "fk_elid", nullable = false)
+	@JsonIgnore
 	private Ellato ellato;
 
-    enum Statusz{ ELOJEGYZETT, NYITOTT, LEZART }
+	@Column(name = "fk_elid", insertable = false, updatable = false)
+	private int ellatoId;
+
+	public enum Statusz{ ELOJEGYZETT, NYITOTT, LEZART }
 
     @Enumerated(EnumType.ORDINAL)
     private Statusz statusz;
@@ -70,6 +81,22 @@ public class Kezeles implements Serializable {
     public void setNyitdate(Date nyitdate) { this.nyitdate = nyitdate; }
     public Date getVegdate() { return this.vegdate; }
     public void setVegdate(Date vegdate) { this.vegdate = vegdate; }
+	public int getEsetId()
+	{
+		return esetId;
+	}
+	public void setEsetId( int esetId )
+	{
+		this.esetId = esetId;
+	}
+	public int getEllatoId()
+	{
+		return ellatoId;
+	}
+	public void setEllatoId( int ellatoId )
+	{
+		this.ellatoId = ellatoId;
+	}
 
 }
 

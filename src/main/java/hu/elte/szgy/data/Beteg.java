@@ -46,5 +46,7 @@ public class Beteg implements Serializable {
 		this.esetek = esetek;
 	}
 
-}
+
+    public Beteg() { ; }
+    public Beteg(Integer taj) { this.taj = taj; }}
 

@@ -14,6 +14,8 @@ import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name="ellato")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -25,6 +27,7 @@ public class Ellato implements Serializable {
 	private int elid;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "ellato")
+    @JsonIgnore
     private Set<Kezeles> kezelesek = new HashSet<Kezeles>(0);
 
     private String nev;
@@ -35,5 +38,11 @@ public class Ellato implements Serializable {
     public void setKezelesek(Set<Kezeles> kezelesek) { this.kezelesek = kezelesek; }
     public String getNev() { return this.nev; }
     public void setNev(String nev) { this.nev = nev; }
+    
+    public String getType() {
+    	if(getClass() == Orvos.class) return "ORVOS";
+    	if(getClass() == Labor.class) return "LABOR";
+    	return "????";
+    }
 }
 

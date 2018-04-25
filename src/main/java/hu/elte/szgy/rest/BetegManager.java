@@ -2,8 +2,11 @@ package hu.elte.szgy.rest;
 
 import hu.elte.szgy.data.Beteg;
 import hu.elte.szgy.data.BetegRepository;
+import hu.elte.szgy.data.EllatoRepository;
 import hu.elte.szgy.data.Eset;
+import hu.elte.szgy.data.EsetRepository;
 import hu.elte.szgy.data.Kezeles;
+import hu.elte.szgy.data.KezelesRepository;
 
 import java.security.Principal;
 import java.util.Date;
@@ -35,6 +38,12 @@ public class BetegManager {
 
 	@Autowired
 	private BetegRepository betegRepo;
+	@Autowired
+	private EsetRepository esetRepo;
+	@Autowired
+	private KezelesRepository kezelesRepo;
+	@Autowired
+	private EllatoRepository ellatoRepo;
 
 	int userUrsulaID(Authentication auth) {
 		return ((UrsulaUserPrincipal)auth.getPrincipal()).getUrsulaId();
@@ -60,15 +69,19 @@ public class BetegManager {
     }
 
 	@GetMapping("/{taj}/esetek")
-    public ResponseEntity<List<Eset>> listEsetek(@PathVariable("taj") Integer taj, Authentication auth) { return null; } 
+    public ResponseEntity<List<Eset>> listEsetek(@PathVariable("taj") Integer taj, Authentication auth) { 
+		return new ResponseEntity<List<Eset>>(esetRepo.findEsetekByBeteg(betegRepo.getOne(taj)),HttpStatus.OK);
+	} 
 
 	@GetMapping("/{taj}/{esid}/kezelesek")
-    public ResponseEntity<List<Kezeles>> listKezelesek(@PathVariable("taj") Integer taj, @PathVariable("esid") Integer esit, Authentication auth) { return null; } 
+    public ResponseEntity<List<Kezeles>> listKezelesek(@PathVariable("taj") Integer taj, @PathVariable("esid") Integer esid, Authentication auth) { 
+		return new ResponseEntity<List<Kezeles>>(kezelesRepo.findByEset(esetRepo.getOne(esid)),HttpStatus.OK);
+	} 
     		
-	@GetMapping("kezeles/{kid}")
+	@GetMapping("/kezeles/{kid}")
     public ResponseEntity<Kezeles> getKezeles(@PathVariable("kid") Integer kid, @PathVariable("esid") Integer esit, Authentication auth) { return null; } 
 
-	@GetMapping("kezeles/{kid}/alt_dates")
+	@GetMapping("/kezeles/{kid}/alt_dates")
     public ResponseEntity<Date> getKezelesAltDate(@PathVariable("kid") Integer kid, @PathVariable("esid") Integer esit, Authentication auth) { return null; } 
 
 	@PostMapping("/new")
@@ -87,13 +100,29 @@ public class BetegManager {
 	public ResponseEntity<Void> saveBeteg(@RequestBody Beteg b) { return null; }
 
 	@PostMapping("/eset/new")
-	public ResponseEntity<Void> newEset(@RequestBody Eset e) { return null; }
+	public ResponseEntity<Eset> newEset(@RequestBody Eset e) {
+		log.info("Saving eset...");
+		e.setBeteg( betegRepo.getOne( e.getBetegTAJ() ) );
+		e.setNyitdate( new Date() );
+		e.setStatusz( Eset.Statusz.NYITOTT );
+		e = esetRepo.save(e); 
+		log.info("Saved eset..." + e.getEsid() + e.getBeteg().getNev());
+		return new ResponseEntity<Eset>(e, HttpStatus.CREATED);
+	}
 	
 	@PostMapping("/eset/save")
 	public ResponseEntity<Void> saveEset(@RequestBody Eset e) { return null; }
 	
 	@PostMapping("/kezeles/new")
-	public ResponseEntity<Void> saveEset(@RequestBody Kezeles k) { return null; }
+	public ResponseEntity<Kezeles> saveEset(@RequestBody Kezeles k) {
+		k.setEset( esetRepo.getOne( k.getEsetId() ) );
+		k.setEllato( ellatoRepo.getOne( k.getEllatoId() ) );
+
+		k.setStatusz( Kezeles.Statusz.ELOJEGYZETT );
+		k.setNyitdate( new Date() );
+		k=kezelesRepo.save(k);
+		return new ResponseEntity<Kezeles>(k, HttpStatus.CREATED);
+	}
 	
 	@PostMapping("/kezeles/orvos")
 	public ResponseEntity<Void> setOrvosToEset(@RequestBody Kezeles k ) { return null; }

@@ -1,4 +1,6 @@
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -106,7 +108,12 @@ public class UrsulaClient {
 							try {
 								Integer.parseInt( value );
 								jsonvalue=value;
-							} catch(NumberFormatException e) { ; }
+							} catch(NumberFormatException e) { 
+/*							try {
+								new SimpleDateFormat("mm/dd/yyyy").parse( value );
+								jsonvalue=value;
+							} catch(ParseException e2) { ; } */
+							}
 						}
 						if(post_args.length() != 0) post_args.append( ", " ); 
 						post_args.append("\""+key+"\":"+jsonvalue);
@@ -131,7 +138,7 @@ public class UrsulaClient {
 				}
 			}
 			if(returned != null) {
-				returned.replace( "}", "}\n" );
+				returned=returned.replace( "},", "}\n" );
 			    System.out.println("RESULTS \n"+returned);
 				System.out.println("=======================");
 			}
@@ -249,15 +256,8 @@ public class UrsulaClient {
 		Menu okmenu = new Menu("MŰVELET MEGTÖRTÉNT");
 		
 		
-		Menu adminmmenu = new Menu("ADMIN FŐMENÜ");
 		
-		Menu recepcmmenu = new Menu("RECEPCIOS FŐMENÜ");
 		
-		mainmenudispatch.add("BETEG", betegmmenu,"TAJ");
-		mainmenudispatch.add("RECEPCIO", recepcmmenu,null);
-		mainmenudispatch.add("ORVOS", betegmmenu,"ELID");
-		mainmenudispatch.add("LABOR", betegmmenu,"ELID");
-		mainmenudispatch.add("ADMIN", adminmmenu,null);
 
 	
 		loginmenu.add(new Option("Bejelentkezés", mainmenudispatch, "/login", "username", "password"));
@@ -267,11 +267,28 @@ public class UrsulaClient {
 		betegmmenu.add(new Option("Függő kezelések", betegkezmenu, "/beteg/%@TAJ%/fuggokezelesek"));
 		betegmmenu.add(new Option("Passwd vált.", passwordmenu, "/user/password", "new_pass"));
 
+		Menu adminmmenu = new Menu("ADMIN FŐMENÜ");
 		adminmmenu.add(new Option("Új osztaly", okmenu, "/ellato/osztaly/new", "nev"));
 		adminmmenu.add(new Option("Új orvos", okmenu, "/ellato/orvos/new", "nev", "osztaly"));
 		adminmmenu.add(new Option("Új labor", okmenu, "/ellato/labor/new", "nev", "Stelefon"));
 		adminmmenu.add(new Option("Új user", okmenu, "/user/new", "username", "password", "type", "userid"));
 		adminmmenu.add(new Option("Passwd vált.", passwordmenu, "/user/password/%userid%", "userid", "new_pass"));
+
+		Menu recepcmmenu = new Menu("RECEPCIOS FŐMENÜ");
+		recepcmmenu.add(new Option("Új beteg", okmenu, "/beteg/new", "taj", "nev", "szuldatum", "foglalkozas"));
+		recepcmmenu.add(new Option("Új eset", okmenu, "/beteg/eset/new", "betegTAJ", "panasz"));
+		recepcmmenu.add(new Option("Új kezeles", okmenu, "/beteg/kezeles/new", "esetId", "specifikacio", "ellatoId"));
+		recepcmmenu.add(new Option("Eset lista", okmenu, "/beteg/%taj%/esetek", "taj"));
+		recepcmmenu.add(new Option("Kezeles lista", okmenu, "/beteg/%taj%/%eset%/kezelesek", "taj", "eset"));
+		recepcmmenu.add(new Option("Ellato lista", okmenu, "/ellato/all"));
+		recepcmmenu.add(new Option("Ellato keres", okmenu, "/ellato/%elid%", "elid"));
+		
+		mainmenudispatch.add("BETEG", betegmmenu,"TAJ");
+		mainmenudispatch.add("RECEPCIO", recepcmmenu,null);
+		mainmenudispatch.add("ORVOS", betegmmenu,"ELID");
+		mainmenudispatch.add("LABOR", betegmmenu,"ELID");
+		mainmenudispatch.add("ADMIN", adminmmenu,null);
+
 		loginmenu.display( null, null );
 		System.out.println("Exiting UrsulaClient...");
     	} catch (Exception e) {
