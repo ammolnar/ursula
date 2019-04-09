@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
     <head>
     	<meta charset="utf-8"/>
-        <title>Spring Security Example</title>
+        <title>URSULA - Recepciós felület</title>
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/extjs/6.2.0/classic/theme-neptune/resources/theme-neptune-all.css">
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/extjs/6.2.0/ext-all.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/extjs/6.2.0/classic/theme-neptune/theme-neptune.js"></script>
@@ -20,11 +20,16 @@
                 }); 
                 field = Ext.create('Ext.form.field.Text', {
                         renderTo: Ext.getBody(),
-                        fieldLabel: 'Enter TAJ szam',
+                        fieldLabel: 'Adja meg a TAJ számot',
                         margin: 10,
                         value: 5598
                 });
 
+				Ext.define('Ursula.beteg', {
+						extends: Ext.data.Model,
+						fields: ['nev', 'taj', 'szuldatum', 'foglalkozas']
+                });
+						
                 Ext.create('Ext.Button', {
                         renderTo: Ext.getBody(),
                         margin: 10,
@@ -34,15 +39,16 @@
 						     url: 'beteg/'+field.getValue(),
 						
 						     success: function(response, opts) {
-						         var obj = Ext.decode(response.responseText);
-						         console.dir(obj);
-						         panel.removeAll();
-						         Object.getOwnPropertyNames(obj).forEach(function (prop) {
-						             panel.add({xtype: 'label',text:prop + ": " + obj[prop]});
-						         });
+						         try {
+						           var obj = Ext.decode(response.responseText,true);
+						           if(!obj) failure(response, opts);
+						           console.dir(obj);
+							       beteg.setData(obj);
+							     } catch(err) { console.log("ERROR PARSE"); window.location.href='/login'; }
 						     },
 						     failure: function(response, opts) {
 						         console.log('server-side failure with status code ' + response.status);
+						         window.setLocation('/');
 						     }
 					     	});
 						    esetek.getProxy().setUrl('beteg/'+field.getValue()+'/esetek');
@@ -50,14 +56,37 @@
 					     }
 				 });
 
-                panel = Ext.create('Ext.Panel', {
+				beteg = Ext.create('Ext.app.ViewModel',{
+					formulas : {
+   					 shortszuldat    : function (getter) {
+   					 	return getter('szuldatum').split("T")[0];
+				    }}
+  				});
+
+                panel = Ext.create('Ext.form.Panel', {
+                		title: 'Beteg részletek',
+                		viewModel:beteg,
+                		width: 500,
                         renderTo: Ext.getBody(),
-                        title: 'Beteg Details',
-                        margin: 10,
-                        layout: 'vbox',
-                        width: 200,
-                        height: 100,
-                        scrollable: true
+                        defaultType: 'textfield',
+					    items: [{
+        					fieldLabel: 'Név',
+        					bind: '{nev}',
+        					allowBlank: false
+    					},{
+        					fieldLabel: 'TAJ Szám',
+        					bind: '{taj}',
+        					allowBlank: false
+    					},{
+        					fieldLabel: 'Szül. dátum',
+        					bind: '{shortszuldat}',
+        					allowBlank: false
+    					},{
+        					fieldLabel: 'Foglalkozás:',
+        					bind: '{foglalkozas}',
+        					allowBlank: true
+    					}]
+						
                 });
 
 
@@ -109,6 +138,16 @@
                         }]
                         });
                 
+                Ext.create('Ext.panel.Panel', {
+                	viewModel: beteg,
+                	layout: 'hbox',
+                	defaults: { margin: 5},
+                	renderTo: Ext.getBody(),
+                	items: [
+                	  { xtype: 'button', text: 'Új Eset...', disabled: true, bind: { disabled: '{!taj}'} }, 
+                	  { xtype: 'button', text: 'Új Kezelés...'}
+                	]
+                });
         });
         </script>
         
