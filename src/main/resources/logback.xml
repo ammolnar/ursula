@@ -16,5 +16,10 @@
 		additivity="false">
 		<appender-ref ref="STDOUT" />
   </logger>
+
+  <logger name="ursula" level="info"
+		additivity="false">
+		<appender-ref ref="STDOUT" />
+  </logger>
   
 </configuration>

@@ -7,6 +7,7 @@ import hu.elte.szgy.data.Eset;
 import hu.elte.szgy.data.EsetRepository;
 import hu.elte.szgy.data.Kezeles;
 import hu.elte.szgy.data.KezelesRepository;
+import hu.elte.szgy.data.Osztaly;
 
 import java.security.Principal;
 import java.util.Date;
@@ -59,12 +60,12 @@ public class BetegManager {
     		Principal principal, Authentication auth) {
 
 		Beteg b = betegRepo.findById(taj).get();
+		log.info("Beteg type: {} {}", b.getClass().getName(), 11);
 //		if(b == null) throw new ResourceNotFoundException( "Beteg "+taj+" not found"  );
 		if(auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ELLATO"))) {
 			if(betegRepo.hasPendingKezelesBy(taj,userUrsulaID(auth))==0) throw new AccessDeniedException("No access to TAJ: "+taj);
 			log.debug( "Checked uses for orvos" );
 		}
-		b.getNev();
 		return new ResponseEntity<Beteg>(b, HttpStatus.OK);
     }
 
@@ -124,16 +125,57 @@ public class BetegManager {
 		return new ResponseEntity<Kezeles>(k, HttpStatus.CREATED);
 	}
 	
-	@PostMapping("/kezeles/orvos")
-	public ResponseEntity<Void> setOrvosToEset(@RequestBody Kezeles k ) { return null; }
+	@PostMapping("/kezeles/{kid}/nyit")
+	public ResponseEntity<Kezeles> nyitKezeles(@PathVariable("kid") Integer kid, @RequestBody Kezeles knew ) { 
+		if (knew.getKezid() != kid) 
+		    throw new AccessDeniedException("Cannot save on different object");
+		Kezeles k = kezelesRepo.findById(kid).get();
+		k.setNyitdate(new Date());
+		k.setNyitallapot(knew.getNyitallapot());
+		k.setSpecifikacio(knew.getSpecifikacio());
+		return new ResponseEntity<Kezeles>(k, HttpStatus.CREATED);
+	}
 
-	@PostMapping("/kezeles/nyit")
-	public ResponseEntity<Void> nyitEset(@RequestBody Kezeles k ) { return null; }
+	@PostMapping("/kezeles/{kid}/zar")
+	public ResponseEntity<Kezeles> zarKezeles(@PathVariable("kid") Integer kid, @RequestBody Kezeles knew ) { 
+		if (knew.getKezid() != kid) 
+		    throw new AccessDeniedException("Cannot save on different object");
+		Kezeles k = kezelesRepo.findById(kid).get();
+		k.setVegdate(new Date());
+		k.setVegallapot(knew.getVegallapot());
+		return new ResponseEntity<Kezeles>(k, HttpStatus.CREATED);
+	}
 
-	@PostMapping("/kezeles/zar")
-	public ResponseEntity<Void> zarEset(@RequestBody Kezeles k ) { return null; }
+
+	@PostMapping("/kezeles/{kid}")
+	public ResponseEntity<Kezeles> updateKezeles(@PathVariable("kid") Integer kid, @RequestBody Kezeles knew ) {
+		if (knew.getKezid() != kid) 
+		    throw new AccessDeniedException("Cannot save on different object");
+		Kezeles k = kezelesRepo.findById(kid).get();
+		if(knew.getEllatoId() != null) k.setEllato(ellatoRepo.getOne(knew.getEllatoId()));
+		if(knew.getNyitdate() != null) k.setNyitdate(knew.getNyitdate());
+		if(knew.getVegdate() != null) k.setVegdate(knew.getVegdate());
+		if(knew.getStatusz() != null) k.setStatusz(knew.getStatusz());
+		if(knew.getTajpontok() >= 0) k.setTajpontok(knew.getTajpontok());
+		if(knew.getSpecifikacio() != null) k.setSpecifikacio(knew.getSpecifikacio());
+		// TODO: egyéb fieldek
+	    
+		return new ResponseEntity<Kezeles>(k, HttpStatus.ACCEPTED);
+	    
+	}
 
 	@PostMapping("/kezeles/{kid}/change_date")
-	public ResponseEntity<Void> setOrvosToEset(@PathVariable("kid") Integer kid, @RequestBody Date d ) { return null; }
+	public ResponseEntity<Date> setKezelesDate(@PathVariable("kid") Integer kid, @RequestBody Date d ) { 
+	    Kezeles k = kezelesRepo.getOne(kid);
+	    if(k.getStatusz() != Kezeles.Statusz.ELOJEGYZETT) {
+		throw new AccessDeniedException("Kezeles is already in progress");
+	    }
+	    if(d.before(new Date())) {
+		throw new AccessDeniedException("Date is in the past");
+	    }
+	    k.setNyitdate(d);
+	    kezelesRepo.save(k);
+	    return new ResponseEntity<Date>(k.getNyitdate(), HttpStatus.ACCEPTED);
+	}
 }
 

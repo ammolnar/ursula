@@ -15,16 +15,23 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @Entity
-@Table(name="ellato")
+@Table(name = "ellato")
 @Inheritance(strategy = InheritanceType.JOINED)
 //@NamedQuery(name="Ellato.getAllEllato", query="SELECT e from Ellato as e order by e.nev")
-public class Ellato implements Serializable { 
-	private static final long serialVersionUID = 1L;
-	@Id 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes({ @Type(value = Orvos.class, name = "ORVOS"), @Type(value = Labor.class, name = "LABOR") })
+@JsonIgnoreProperties({ "type"})
+public class Ellato implements Serializable {
+    private static final long serialVersionUID = 1L;
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int elid;
+    private int elid;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "ellato")
     @JsonIgnore
@@ -32,17 +39,35 @@ public class Ellato implements Serializable {
 
     private String nev;
 
-    public int getElid() { return this.elid; }
-    public void setElid(int elid) { this.elid = elid; }
-    public Set<Kezeles> getKezelesek() { return this.kezelesek; }
-    public void setKezelesek(Set<Kezeles> kezelesek) { this.kezelesek = kezelesek; }
-    public String getNev() { return this.nev; }
-    public void setNev(String nev) { this.nev = nev; }
-    
+    public int getElid() {
+	return this.elid;
+    }
+
+    public void setElid(int elid) {
+	this.elid = elid;
+    }
+
+    public Set<Kezeles> getKezelesek() {
+	return this.kezelesek;
+    }
+
+    public void setKezelesek(Set<Kezeles> kezelesek) {
+	this.kezelesek = kezelesek;
+    }
+
+    public String getNev() {
+	return this.nev;
+    }
+
+    public void setNev(String nev) {
+	this.nev = nev;
+    }
+
     public String getType() {
-    	if(getClass() == Orvos.class) return "ORVOS";
-    	if(getClass() == Labor.class) return "LABOR";
-    	return "????";
+	if (getClass() == Orvos.class)
+	    return "ORVOS";
+	if (getClass() == Labor.class)
+	    return "LABOR";
+	return "????";
     }
 }
-

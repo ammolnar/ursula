@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -22,13 +23,39 @@ public class Osztaly implements Serializable {
 	private String nev;
 
 	@ManyToOne
-	@JoinColumn(nullable = true)
+	@JoinColumn(nullable = false)
+	@JsonIgnore
 	private Orvos vezeto;
+	
+	@Column(name = "vezeto_elid", insertable = false, updatable = false)
+	private Integer vezetoId;
+
+
+	public Integer getVezetoId() {
+	    return vezetoId;
+	}
+
+	public void setVezetoId(Integer vezetoId) {
+	    this.vezetoId = vezetoId;
+	}
+
+	public Integer getUgyeletesId() {
+	    return ugyeletesId;
+	}
+
+	public void setUgyeletesId(Integer ugyeletesId) {
+	    this.ugyeletesId = ugyeletesId;
+	}
 
 	@ManyToOne
 	@JoinColumn(nullable = true)
+	@JsonIgnore
 	private Orvos ugyeletes;
 
+	@Column(name = "ugyeletes_elid", insertable = false, updatable = false)
+	private Integer ugyeletesId;
+
+	
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "osztaly")
     @JsonIgnore
     private Set<Orvos> orvosok = new HashSet<Orvos>(0);

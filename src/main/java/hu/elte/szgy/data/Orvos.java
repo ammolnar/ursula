@@ -26,7 +26,7 @@ public class Orvos extends Ellato implements Serializable {
 	@JsonIgnore
 	private Osztaly osztaly;
 	
-	@Column(name = "osztaly", insertable = false, updatable = false)
+	@Column(name = "osztaly_nev", insertable = false, updatable = false)
 	private String osztalyId;
 	
 	public Osztaly getOsztaly()

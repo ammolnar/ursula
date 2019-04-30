@@ -38,7 +38,7 @@ public class Kezeles implements Serializable {
 	private Ellato ellato;
 
 	@Column(name = "fk_elid", insertable = false, updatable = false)
-	private int ellatoId;
+	private Integer ellatoId;
 
 	public enum Statusz{ ELOJEGYZETT, NYITOTT, LEZART }
 
@@ -89,11 +89,11 @@ public class Kezeles implements Serializable {
 	{
 		this.esetId = esetId;
 	}
-	public int getEllatoId()
+	public Integer getEllatoId()
 	{
 		return ellatoId;
 	}
-	public void setEllatoId( int ellatoId )
+	public void setEllatoId( Integer ellatoId )
 	{
 		this.ellatoId = ellatoId;
 	}
